@@ -7,6 +7,7 @@ from langchain_classic.agents.react.agent import create_react_agent
 
 from langchain_core.output_parsers.pydantic import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda
 
 from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
@@ -41,7 +42,11 @@ executer = AgentExecutor(
     tools=tools,           # Tools that executer have access to
     verbose=True
 )
-chain = executer
+
+extract_output = RunnableLambda(lambda x: x['output'])
+parse_output = RunnableLambda(lambda x: output_parser.parse(x))
+
+chain = executer | extract_output | parse_output
 
 
 def main():
@@ -50,7 +55,7 @@ def main():
             "input": "Search for 3 papers written after 2021, about using retrieval augemented generation in forensics"
         }
     )
-    print(output_parser.parse(result['output']))
+    print(result)
 
 
 if __name__ == '__main__':
